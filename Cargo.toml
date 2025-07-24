@@ -1,0 +1,29 @@
+[package]
+name = "libtorch-rust"
+version = "0.1.0"
+edition = "2021"
+authors = ["LibTorch Rust Team"]
+description = "Rust bindings for LibTorch C++ API"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/your-org/libtorch-rust"
+keywords = ["pytorch", "libtorch", "tensor", "machine-learning", "deep-learning"]
+categories = ["science", "api-bindings"]
+
+[dependencies]
+libc = "0.2"
+half = "2.0"
+thiserror = "1.0"
+
+[build-dependencies]
+cc = "1.0"
+bindgen = "0.69"
+pkg-config = "0.3"
+
+[features]
+default = ["cuda"]
+cuda = []
+cpu-only = []
+
+[lib]
+name = "libtorch_rust"
+crate-type = ["cdylib", "rlib"]
