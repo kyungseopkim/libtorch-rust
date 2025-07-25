@@ -1,27 +1,35 @@
 # LibTorch Rust
 
-Rust bindings for the LibTorch C++ API, providing seamless integration of PyTorch's tensor operations and neural network capabilities in Rust applications.
+Rust bindings for the LibTorch C++ API, providing tensor operations and basic neural network capabilities for Rust applications.
 
-## Features
+## Current Status
 
-- **Rust bindings for LibTorch C++ tensor operations**
-- **Neural network module support through C++ API wrapper**
-- **Automatic differentiation (autograd) integration**
-- **CUDA/GPU acceleration support via LibTorch**
-- **Multi-threaded tensor operations**
-- **Custom operator registration and execution**
-- **Advanced optimization algorithms (Adam, SGD, etc.)**
-- **Model serialization/deserialization (save/load PyTorch models)**
-- **Quantization and model pruning capabilities**
-- **Mixed precision training support**
-- **Memory-efficient tensor management**
-- **Cross-platform compatibility (Linux, macOS, Windows)**
+This project provides working Rust bindings for core LibTorch tensor operations. The implementation includes:
+
+✅ **Implemented Features:**
+- Basic tensor creation and manipulation
+- Element-wise operations (add, multiply)
+- Matrix multiplication (matmul)
+- Tensor reshaping
+- Memory-efficient tensor management with proper Drop implementations
+- CPU-only operations (default)
+- Optional CUDA support
+- Cross-platform compatibility (Linux, macOS, Windows)
+
+🚧 **Planned Features:**
+- Neural network modules (Linear layers, etc.)
+- Automatic differentiation (autograd)
+- Advanced optimization algorithms
+- Model serialization/deserialization
+- Quantization and model pruning
 
 ## Prerequisites
 
-Before building this project, you need to have LibTorch installed. Download LibTorch from the official PyTorch website and extract it to a directory (e.g., `../libtorch`).
+Before building this project, you need LibTorch installed:
 
-Set the `LIBTORCH_PATH` environment variable to point to your LibTorch installation:
+1. Download LibTorch from the [official PyTorch website](https://pytorch.org/get-started/locally/)
+2. Extract it to a directory (e.g., `../libtorch`)
+3. Set the `LIBTORCH_PATH` environment variable (optional, defaults to `../libtorch`):
 
 ```bash
 export LIBTORCH_PATH=/path/to/libtorch
@@ -29,14 +37,14 @@ export LIBTORCH_PATH=/path/to/libtorch
 
 ## Building
 
+### CPU-only (Default)
 ```bash
 cargo build --release
 ```
 
-For CPU-only builds:
-
+### With CUDA support
 ```bash
-cargo build --release --no-default-features --features cpu-only
+cargo build --release --features cuda
 ```
 
 ## Usage
@@ -60,72 +68,28 @@ fn main() -> Result<()> {
     let product = tensor.mul(&ones)?;
     let matmul_result = tensor.matmul(&ones)?;
     
-    Ok(())
-}
-```
-
-### Neural Networks
-
-```rust
-use libtorch_rust::{Tensor, nn::{Linear, Module}, Result};
-
-fn main() -> Result<()> {
-    let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![1, 4])?;
+    // Reshape tensor
+    let reshaped = tensor.reshape(vec![1, 4])?;
     
-    // Create layers
-    let linear1 = Linear::new(4, 8)?;
-    let linear2 = Linear::new(8, 2)?;
-    
-    // Forward pass
-    let hidden = linear1.forward(&input)?;
-    let relu_output = hidden.clamp_min(0.0)?; // ReLU activation
-    let output = linear2.forward(&relu_output)?;
+    // Get tensor properties
+    println!("Shape: {:?}", tensor.shape());
+    println!("Element count: {}", tensor.numel());
+    println!("Data type: {}", tensor.dtype());
     
     Ok(())
 }
 ```
 
-### Automatic Differentiation
+### Running with LibTorch
 
-```rust
-use libtorch_rust::{Tensor, Result};
+Since the library depends on LibTorch dynamic libraries, you need to set the library path when running:
 
-fn main() -> Result<()> {
-    let x = Tensor::new(vec![2.0, 3.0], vec![2, 1])?
-        .requires_grad(true)?;
-    
-    let y = x.pow(2.0)?;
-    let z = y.mean()?;
-    
-    z.backward()?;
-    
-    if let Some(grad) = x.grad()? {
-        println!("Gradient: {:?}", grad);
-    }
-    
-    Ok(())
-}
-```
+```bash
+# On macOS/Linux
+DYLD_LIBRARY_PATH=../libtorch/lib cargo run
 
-### CUDA Support
-
-```rust
-use libtorch_rust::{Tensor, cuda, Result};
-
-fn main() -> Result<()> {
-    if cuda::is_available() {
-        let tensor = Tensor::ones(vec![1000, 1000])?;
-        let gpu_tensor = tensor.cuda()?;
-        
-        // Perform operations on GPU
-        let result = gpu_tensor.matmul(&gpu_tensor)?;
-        
-        // Move back to CPU
-        let cpu_result = result.cpu()?;
-    }
-    
-    Ok(())
-}
+# On Linux (alternative)
+LD_LIBRARY_PATH=../libtorch/lib cargo run
 ```
 
 ## Examples
@@ -133,21 +97,89 @@ fn main() -> Result<()> {
 Run the provided examples:
 
 ```bash
-# Basic tensor operations
-cargo run --example basic_tensor
+# Test runner with comprehensive tests
+DYLD_LIBRARY_PATH=../libtorch/lib cargo run --example test_runner
 
-# Neural network example
-cargo run --example neural_network
-
-# Autograd example  
-cargo run --example autograd
+# Performance benchmarks
+DYLD_LIBRARY_PATH=../libtorch/lib cargo run --example performance_test
 ```
 
 ## Testing
 
+### Quick Test Script
 ```bash
-cargo test
+./run_tests.sh
 ```
+
+### Manual Testing
+```bash
+# Library tests only
+DYLD_LIBRARY_PATH=../libtorch/lib cargo test --lib
+
+# All tests (library + examples)
+DYLD_LIBRARY_PATH=../libtorch/lib cargo test
+```
+
+## Project Structure
+
+```
+src/
+├── lib.rs              # Main library entry point
+├── error.rs            # Error handling
+├── tensor/mod.rs       # Tensor implementation
+├── cpp/torch_wrapper.cpp # C++ wrapper functions
+└── simple_test.rs      # Comprehensive test suite
+
+examples/
+├── test_runner.rs      # Full test suite runner
+└── performance_test.rs # Performance benchmarks
+
+examples_backup/        # Advanced examples (work in progress)
+├── neural_network.rs   # Neural network layers
+├── autograd.rs         # Automatic differentiation
+└── ...                 # Other advanced features
+```
+
+## API Reference
+
+### Tensor Creation
+- `Tensor::new(data: Vec<f32>, shape: Vec<i64>)` - Create tensor from data
+- `Tensor::zeros(shape: Vec<i64>)` - Create zero-filled tensor
+- `Tensor::ones(shape: Vec<i64>)` - Create ones-filled tensor
+
+### Tensor Operations
+- `tensor.add(&other)` - Element-wise addition
+- `tensor.mul(&other)` - Element-wise multiplication
+- `tensor.matmul(&other)` - Matrix multiplication
+- `tensor.reshape(new_shape: Vec<i64>)` - Reshape tensor
+
+### Tensor Properties
+- `tensor.shape()` - Get tensor dimensions
+- `tensor.numel()` - Get total number of elements
+- `tensor.dtype()` - Get data type
+
+## Features
+
+The project supports the following cargo features:
+
+- `default = []` - CPU-only build (default)
+- `cuda` - Enable CUDA/GPU support
+- `cpu-only` - Explicitly CPU-only (same as default)
+
+## Development
+
+### Build Configuration
+
+The build process uses:
+- `bindgen` for generating Rust FFI bindings from C++ headers
+- `cc` crate for compiling the C++ wrapper code
+- Automatic LibTorch library linking
+
+### Contributing
+
+1. Ensure all tests pass: `./run_tests.sh`
+2. Check that examples compile: `cargo check --examples`
+3. Follow the existing code patterns for FFI and memory management
 
 ## License
 
@@ -160,4 +192,8 @@ at your option.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. Make sure to:
+
+- Add tests for new functionality
+- Update documentation
+- Follow Rust best practices for FFI and memory safety

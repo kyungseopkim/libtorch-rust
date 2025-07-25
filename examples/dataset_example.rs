@@ -58,7 +58,7 @@ fn main() -> Result<()> {
     
     // 5. Data Normalization
     println!("\n5. Data normalization:");
-    let (normalized_features, stats) = normalize_features(&train_dataset.features)?;
+    let (_normalized_features, stats) = normalize_features(&train_dataset.features)?;
     println!("  Feature statistics:");
     println!("    Mean: [{:.3}, {:.3}]", stats.mean[0], stats.mean[1]);
     println!("    Std:  [{:.3}, {:.3}]", stats.std[0], stats.std[1]);
@@ -87,7 +87,7 @@ fn main() -> Result<()> {
     
     // 8. Custom Data Loader
     println!("\n8. Custom data loader:");
-    let data_loader = DataLoader::new(train_dataset, 16, true)?;
+    let data_loader = DataLoader::new(train_dataset.clone(), 16, true)?;
     println!("  Data loader created with batch size 16");
     println!("  Shuffle enabled: true");
     
@@ -135,12 +135,14 @@ struct Batch {
 
 struct ImageDataset {
     features: Vec<Tensor>,
+    #[allow(dead_code)]
     labels: Vec<Tensor>,
     num_classes: usize,
 }
 
 struct TimeSeriesDataset {
     sequences: Vec<Tensor>,
+    #[allow(dead_code)]
     targets: Vec<Tensor>,
 }
 
@@ -152,6 +154,7 @@ struct FeatureStats {
 struct DataLoader {
     dataset: Dataset,
     batch_size: usize,
+    #[allow(dead_code)]
     shuffle: bool,
     indices: Vec<usize>,
 }

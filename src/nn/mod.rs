@@ -83,27 +83,7 @@ pub mod activation {
         input.clamp_min(0.0)
     }
     
-    pub fn sigmoid(input: &Tensor) -> Result<Tensor> {
-        input.sigmoid()
-    }
-    
     pub fn softmax(input: &Tensor, dim: i64) -> Result<Tensor> {
         input.softmax(dim)
-    }
-}
-
-pub mod loss {
-    use crate::tensor::Tensor;
-    use crate::error::Result;
-    
-    pub fn mse_loss(input: &Tensor, target: &Tensor) -> Result<Tensor> {
-        let diff = input.sub(target)?;
-        let squared = diff.pow(2.0)?;
-        squared.mean()
-    }
-    
-    pub fn cross_entropy_loss(input: &Tensor, target: &Tensor) -> Result<Tensor> {
-        let log_softmax = input.log_softmax(-1)?;
-        log_softmax.nll_loss(target)
     }
 }

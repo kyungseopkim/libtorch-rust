@@ -46,7 +46,7 @@ fn main() -> Result<()> {
     let creation_time = start.elapsed();
     
     let start = Instant::now();
-    let sum = a.add(&b)?;
+    let _sum = a.add(&b)?;
     let add_time = start.elapsed();
     
     let start = Instant::now();  
@@ -56,7 +56,7 @@ fn main() -> Result<()> {
     println!("  ✅ Creation: {:?}", creation_time);
     println!("  ✅ Addition: {:?}", add_time);
     println!("  ✅ Element-wise Multiplication: {:?}", mul_time);
-    println!("  📊 Elements processed: {}", sum.numel());
+    println!("  📊 Elements processed: {}", product.numel());
     
     println!("\n💯 Performance test completed!");
     

@@ -1,5 +1,4 @@
 use libtorch_rust::{Tensor, Result};
-use std::f32::consts::PI;
 
 fn main() -> Result<()> {
     println!("📊 LibTorch Rust - Time Series Prediction");
@@ -21,7 +20,7 @@ fn main() -> Result<()> {
         time_points.push(t);
     }
     
-    let series_tensor = Tensor::new(time_series.clone(), vec![num_points as i64])?;
+    let _series_tensor = Tensor::new(time_series.clone(), vec![num_points as i64])?;
     println!("  Generated {} time series points", num_points);
     println!("  Data range: [{:.3}, {:.3}]", 
              time_series.iter().fold(f32::INFINITY, |a, &b| a.min(b)),
@@ -49,7 +48,7 @@ fn main() -> Result<()> {
     let split_point = (split_point / window_size) * window_size; // Align with window boundaries
     
     let x_train_data = x_data[..split_point].to_vec();
-    let y_train_data = y_data[..split_point/window_size].to_vec();
+    let _y_train_data = y_data[..split_point/window_size].to_vec();
     let x_test_data = x_data[split_point..].to_vec();
     let y_test_data = y_data[split_point/window_size..].to_vec();
     

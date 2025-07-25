@@ -1,5 +1,4 @@
 use libtorch_rust::{Tensor, Result};
-use std::f32::consts::PI;
 
 fn main() -> Result<()> {
     println!("🔢 LibTorch Rust - Custom Loss Functions");
@@ -22,8 +21,8 @@ fn main() -> Result<()> {
     }
     
     // Convert to tensors
-    let y_true_tensor = Tensor::new(y_true.clone(), vec![y_true.len() as i64])?;
-    let y_pred_tensor = Tensor::new(y_pred.clone(), vec![y_pred.len() as i64])?;
+    let _y_true_tensor = Tensor::new(y_true.clone(), vec![y_true.len() as i64])?;
+    let _y_pred_tensor = Tensor::new(y_pred.clone(), vec![y_pred.len() as i64])?;
     
     // 2. Regression Loss Functions
     println!("\n2. Regression loss functions:");
@@ -41,8 +40,8 @@ fn main() -> Result<()> {
     println!("  Root Mean Squared Error (RMSE): {:.6}", rmse_loss);
     
     // Huber Loss (robust to outliers)
-    let huber_loss = huber_loss(&y_true, &y_pred, 1.0)?;
-    println!("  Huber Loss (δ=1.0): {:.6}", huber_loss);
+    let huber_loss_result = huber_loss(&y_true, &y_pred, 1.0)?;
+    println!("  Huber Loss (δ=1.0): {:.6}", huber_loss_result);
     
     // Log-Cosh Loss
     let log_cosh_loss = log_cosh_loss(&y_true, &y_pred)?;
@@ -383,7 +382,7 @@ fn quantile_loss(y_true: &[f32], y_pred: &[f32], tau: f32) -> Result<f32> {
 }
 
 // Multi-class Loss Functions
-fn categorical_cross_entropy(y_true: &[usize], y_pred_logits: &[Vec<f32>], n_classes: usize) -> Result<f32> {
+fn categorical_cross_entropy(y_true: &[usize], y_pred_logits: &[Vec<f32>], _n_classes: usize) -> Result<f32> {
     if y_true.len() != y_pred_logits.len() {
         return Err(libtorch_rust::TorchError::TensorError("Length mismatch".to_string()));
     }
@@ -412,7 +411,7 @@ fn sparse_categorical_cross_entropy(y_true: &[usize], y_pred_logits: &[Vec<f32>]
 
 // Utility functions
 fn add_outliers(y_true: &[f32], y_pred: &[f32]) -> Result<(Vec<f32>, Vec<f32>)> {
-    let mut y_true_outliers = y_true.to_vec();
+    let y_true_outliers = y_true.to_vec();
     let mut y_pred_outliers = y_pred.to_vec();
     
     // Add a few outliers
@@ -474,7 +473,7 @@ fn simulate_training_with_different_losses() -> Result<()> {
     
     let initial_error = 5.0;
     let epochs = 10;
-    let learning_rate = 0.1;
+    let _learning_rate = 0.1;
     
     println!("  Epoch |   MSE   |   MAE   |  Huber");
     println!("  ------|---------|---------|--------");

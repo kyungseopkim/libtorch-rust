@@ -10,6 +10,16 @@ extern "C" {
     fn tensor_add(a: *mut c_void, b: *mut c_void) -> *mut c_void;
     fn tensor_mul(a: *mut c_void, b: *mut c_void) -> *mut c_void;
     fn tensor_matmul(a: *mut c_void, b: *mut c_void) -> *mut c_void;
+    fn tensor_reshape(tensor: *mut c_void, sizes: *mut i64, ndim: i32) -> *mut c_void;
+    fn tensor_clamp_min(tensor: *mut c_void, min_val: f32) -> *mut c_void;
+    fn tensor_softmax(tensor: *mut c_void, dim: i64) -> *mut c_void;
+    fn tensor_clone(tensor: *mut c_void) -> *mut c_void;
+    fn tensor_requires_grad(tensor: *mut c_void, requires_grad: bool) -> *mut c_void;
+    fn tensor_backward(tensor: *mut c_void);
+    fn tensor_grad(tensor: *mut c_void) -> *mut c_void;
+    fn tensor_sub(a: *mut c_void, b: *mut c_void) -> *mut c_void;
+    fn tensor_pow(tensor: *mut c_void, exponent: f32) -> *mut c_void;
+    fn tensor_mean(tensor: *mut c_void) -> *mut c_void;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -20,10 +30,21 @@ pub enum DType {
     Int64 = 4,
 }
 
+impl std::fmt::Display for DType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DType::Float32 => write!(f, "Float32"),
+            DType::Float64 => write!(f, "Float64"),
+            DType::Int32 => write!(f, "Int32"),
+            DType::Int64 => write!(f, "Int64"),
+        }
+    }
+}
+
 pub struct Tensor {
     pub(crate) ptr: *mut c_void,
-    shape: Vec<i64>,
-    dtype: DType,
+    pub(crate) shape: Vec<i64>,
+    pub(crate) dtype: DType,
 }
 
 impl Tensor {
@@ -160,6 +181,160 @@ impl Tensor {
             shape: result_shape,
             dtype: self.dtype,
         })
+    }
+    
+    pub fn reshape(&self, new_shape: Vec<i64>) -> Result<Tensor> {
+        // Check if the new shape has the same number of elements
+        let old_numel = self.numel();
+        let new_numel: i64 = new_shape.iter().product();
+        
+        if old_numel != new_numel {
+            return Err(TorchError::TensorError(format!(
+                "Cannot reshape tensor with {} elements to shape with {} elements",
+                old_numel, new_numel
+            )));
+        }
+        
+        let mut shape_array = new_shape.clone();
+        let ptr = unsafe {
+            tensor_reshape(self.ptr, shape_array.as_mut_ptr(), new_shape.len() as i32)
+        };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Reshape failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: new_shape,
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn clamp_min(&self, min_val: f32) -> Result<Tensor> {
+        let ptr = unsafe { tensor_clamp_min(self.ptr, min_val) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Clamp min failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn softmax(&self, dim: i64) -> Result<Tensor> {
+        let ptr = unsafe { tensor_softmax(self.ptr, dim) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Softmax failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn requires_grad(self, requires_grad: bool) -> Result<Tensor> {
+        let ptr = unsafe { tensor_requires_grad(self.ptr, requires_grad) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::AutogradError("Failed to set requires_grad".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn backward(&self) -> Result<()> {
+        unsafe { tensor_backward(self.ptr) };
+        Ok(())
+    }
+    
+    pub fn grad(&self) -> Result<Option<Tensor>> {
+        let ptr = unsafe { tensor_grad(self.ptr) };
+        
+        if ptr.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(Tensor {
+                ptr,
+                shape: self.shape.clone(),
+                dtype: self.dtype,
+            }))
+        }
+    }
+    
+    pub fn sub(&self, other: &Tensor) -> Result<Tensor> {
+        if self.shape != other.shape {
+            return Err(TorchError::ShapeMismatch {
+                expected: self.shape.clone(),
+                actual: other.shape.clone(),
+            });
+        }
+        
+        let ptr = unsafe { tensor_sub(self.ptr, other.ptr) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Subtraction failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn pow(&self, exponent: f32) -> Result<Tensor> {
+        let ptr = unsafe { tensor_pow(self.ptr, exponent) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Power operation failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        })
+    }
+    
+    pub fn mean(&self) -> Result<Tensor> {
+        let ptr = unsafe { tensor_mean(self.ptr) };
+        
+        if ptr.is_null() {
+            return Err(TorchError::TensorError("Mean operation failed".to_string()));
+        }
+        
+        Ok(Tensor {
+            ptr,
+            shape: vec![1], // Mean returns a scalar
+            dtype: self.dtype,
+        })
+    }
+}
+
+impl Clone for Tensor {
+    fn clone(&self) -> Self {
+        let ptr = unsafe { tensor_clone(self.ptr) };
+        
+        if ptr.is_null() {
+            panic!("Failed to clone tensor");
+        }
+        
+        Tensor {
+            ptr,
+            shape: self.shape.clone(),
+            dtype: self.dtype,
+        }
     }
 }
 

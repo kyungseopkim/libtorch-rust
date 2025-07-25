@@ -34,11 +34,11 @@ fn main() -> Result<()> {
     
     // Initialize network weights (simplified)
     let w1 = create_random_weights(1, 64)?;
-    let b1 = Tensor::zeros(vec![64])?;
+    let _b1 = Tensor::zeros(vec![64])?;
     let w2 = create_random_weights(64, 32)?;
-    let b2 = Tensor::zeros(vec![32])?;
+    let _b2 = Tensor::zeros(vec![32])?;
     let w3 = create_random_weights(32, 1)?;
-    let b3 = Tensor::zeros(vec![1])?;
+    let _b3 = Tensor::zeros(vec![1])?;
     
     println!("  Weight matrices initialized");
     println!("  W1 shape: {:?}", w1.shape());
@@ -66,7 +66,7 @@ fn main() -> Result<()> {
     batch_x.print();
     
     // Calculate expected outputs
-    let expected_y = batch_x.clone(); // We'll modify this to show cos computation
+    let _expected_y = batch_x.clone(); // We'll modify this to show cos computation
     println!("  Expected cos(x) outputs would be calculated here");
     
     // Training simulation
@@ -86,7 +86,8 @@ fn main() -> Result<()> {
     
     let test_range = vec![-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0];
     for &x in &test_range {
-        let actual = x.cos();
+        let x: f32 = x;
+        let actual: f32 = x.cos();
         let approx = approximate_cosine(x);
         let error = (actual - approx).abs();
         let error_percent = (error / actual.abs()) * 100.0;

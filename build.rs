@@ -38,5 +38,10 @@ fn main() {
         .include(format!("{}/include/torch/csrc/api/include", libtorch_path))
         .flag("-std=c++17")
         .flag("-D_GLIBCXX_USE_CXX11_ABI=0")
+        .flag("-w") // Suppress all warnings
+        .flag("-Wno-unused-parameter")
+        .flag("-Wno-unused-variable")
+        .flag("-Wno-sign-compare")
+        .flag("-Wno-deprecated-declarations")
         .compile("torch_wrapper");
 }

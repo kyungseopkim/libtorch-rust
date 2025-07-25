@@ -169,7 +169,7 @@ fn optimize_standard_gd() -> Result<(f32, i32)> {
     let lr = 0.1;
     
     for iter in 0..100 {
-        let gradient = 2.0 * x - 4.0; // f'(x) = 2x - 4
+        let gradient: f32 = 2.0 * x - 4.0; // f'(x) = 2x - 4
         x = x - lr * gradient;
         
         if gradient.abs() < 1e-6 {
@@ -187,7 +187,7 @@ fn optimize_with_momentum() -> Result<(f32, i32)> {
     let momentum = 0.9;
     
     for iter in 0..100 {
-        let gradient = 2.0 * x - 4.0;
+        let gradient: f32 = 2.0 * x - 4.0;
         velocity = momentum * velocity + lr * gradient;
         x = x - velocity;
         
@@ -204,7 +204,7 @@ fn optimize_adaptive_lr() -> Result<(f32, i32)> {
     let mut lr = 0.5;
     
     for iter in 0..100 {
-        let gradient = 2.0 * x - 4.0;
+        let gradient: f32 = 2.0 * x - 4.0;
         
         // Adaptive learning rate: reduce if gradient is small
         if gradient.abs() < 0.5 {
